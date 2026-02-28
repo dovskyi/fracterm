@@ -2,6 +2,8 @@
 //Too big to put in main, cool mariani
 //silver shenanigans
 ///////////////////////////////////////
+#ifndef PIPE
+#define PIPE
 
 #include <iostream>
 #include <cmath>
@@ -142,14 +144,26 @@ void mariani_silver(const double& dy, const double& dx, const mariani_data m_d, 
         const int round_w = m_d.width/2;
         const int midp_h = m_d.height-round_h;
         const int midp_w = m_d.width-round_w;
-
-        if (check_perimeter(m_d) == 1 && row/1.5 > m_d.height) {
+        if constexpr(f==burning_ship){
+        //small amendement for burning ship, lower part fills otherwise
+        if (check_perimeter(m_d) == 1 && dx < 0.0005) {
                 for (int y=0; y<m_d.width-0; y++){
                         for (int x=0; x<m_d.height-0; x++){
                                 grid[(m_d.h_offset+x)*col+(m_d.w_offset+y)] = grid[m_d.h_offset*col+m_d.w_offset];
                         }
                 }
                 return;
+        }
+        }
+        else{
+        if (check_perimeter(m_d) == 1 && dx < 0.01) {
+                for (int y=0; y<m_d.width-0; y++){
+                        for (int x=0; x<m_d.height-0; x++){
+                                grid[(m_d.h_offset+x)*col+(m_d.w_offset+y)] = grid[m_d.h_offset*col+m_d.w_offset];
+                        }
+                }
+                return;
+        }
         }
 
         if constexpr(perturb){
@@ -222,4 +236,4 @@ void mariani_silver(const double& dy, const double& dx, const mariani_data m_d, 
         mariani_silver<perturb, f, c>(dy, dx, {m_d.h_offset+round_h, m_d.w_offset+round_w, midp_h , midp_w }, p_d);
         return;
 }
-
+#endif

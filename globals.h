@@ -1,6 +1,8 @@
 ////////////////////////////////
 //General control stuff
 ////////////////////////////////
+#ifndef GLOBLS
+#define GLOBLS
 
 #include <iostream>
 #include <cmath>
@@ -9,7 +11,7 @@
 
 //render variables
 int iters = 5000;
-int bailout = 2;
+int bailout = 4;
 
 //coloring constants
 constexpr char density[] = {" .,%&@"};
@@ -93,3 +95,4 @@ char sprite(){
         if (i > sizeof(ref)/sizeof(ref[0])-2) i = 0;
         return ref[i];
 }
+#endif

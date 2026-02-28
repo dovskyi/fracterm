@@ -136,7 +136,6 @@ void usage_message(){
                 <<"Flags:\n"
                 <<"-h | display this message\n"
                 <<"-d | set all defaults\n"
-                <<"-w | in-window controls\n"
                 <<"-f | set fractal [default:mandelbrot]\n"
                 <<"    <mandelbrot, burning_ship, custom_formula>[no perturbation for ship yet]\n"
                 <<"-c | set color   [default:DEM]\n"
@@ -152,7 +151,7 @@ void usage_message(){
                 <<"-/= | zoom in/out\n"
                 <<"q   | quit\n\n"
                 <<"For detailed description of flags, visit\n"
-                <<"fracterm/flags\n";
+                <<"misc/flags\n";
 }
 
 void error_message(){
@@ -352,6 +351,7 @@ int main (int argc, char* argv[]){
                 }
         }
         delete[] grid;
+        delete[] store_Z;
         mpf_clears(bound.right, bound.left, bound.top, bound.bottom, bound.width, bound.height, mpf_zoom, temp, NULL);
 
         refresh();
