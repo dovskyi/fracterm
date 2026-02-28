@@ -1,0 +1,53 @@
+FLAG CATALOG!
+
+-h      Self explanatory, outputs the help message.
+
+-f      Sets the fractal for the program, mandelbrot is always the default.
+        Type it exactly as the name appears. This can be combined with
+        -c (color) flag to get the output you actually want
+        $ fracterm -f burning_ship
+
+-c      Sets the coloring algorithm for the fractal you chose. DEM is almost
+        always the one you want to choose, I added other options literally
+        because I wanted variety. Therefore, default is DEM. You use it
+        similarly to -f, type exactly as the name appears
+        $ fracterm -c dwell
+
+-i      Sets iterations, basically how long do we iterate a point for.
+        Default is 5000, which I find to be a good value between performance
+        for shallow zooms and details. If you choose zoom mode, or plan to
+        go deep, set this up well above 10000. Obviously, the higher the
+        iterations, the worse the performance
+        $ fracterm -i 10000
+
+-b      Sets bailout. With ascii graphics, you can't really tell the
+        difference. But someone might want to play with it, so why not?
+        I won't explain what a bailout is, go to dovskyi/docs to read
+        about how fractal calculation works.
+        $ fracterm -b 4
+
+-m      This is important. -m sets the mode. For the most part, you just
+        want to explore the fractal, pan the space, zoom in/out here and
+        there. For this, choose "explore". You don't even need to choose 
+        it, as it is the default.
+        "zoom" is a mode if you want to continuously zoom into a single
+        reference point. In the future it will lock you in place with 
+        automatical zoom in/out. Obviously, you need to provide the
+        reference point first.
+        I'll work on it more later, no time right now 3:
+        $ fracterm -m zoom 1.534 -0.0023
+
+
+
+Full initialization examples:
+
+$ fracterm 
+Creates: Mandelbrot, DEM, explore mode, default variables
+
+$ fracterm -f burning_ship -c dwell -i 8500
+Creates: Burning ship, dwell, iterations set to 8500
+
+$ fracterm -m zoom -1.789169018604823106674468341188838763817361836815 -0.000000339368515767182566028230266146812728348218894593 -i 15000
+Creates: Mandelbrot, DEM, zoom mode with reference point at provided coordinates, 15000 iterations
+
+
