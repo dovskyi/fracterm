@@ -2,8 +2,8 @@
 //Too big to put in main, cool mariani
 //silver shenanigans
 ///////////////////////////////////////
-#ifndef PIPE
-#define PIPE
+#ifndef _PIPE
+#define _PIPE
 
 #include <iostream>
 #include <cmath>

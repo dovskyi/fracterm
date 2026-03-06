@@ -1,11 +1,12 @@
 ////////////////////////////////
 //General control stuff
 ////////////////////////////////
-#ifndef GLOBLS
-#define GLOBLS
+#ifndef _GLOBLS
+#define _GLOBLS
 
 #include <iostream>
 #include <cmath>
+#include <fstream>
 
 #define norm_lim 3
 
@@ -48,8 +49,20 @@ enum mode{
         zoom
 };
 
+std::fstream binfile;
+
+void (*generate_set_p)(const double&, const double&);
+void (*update_precision_p)(const double&);
+void (*navigate_p)();
+
 char* part_i;
 char* part_r;
+
+struct frame{
+        int width;
+        int height;
+        char* data;
+};
 
 struct bounds{
 //complex plane bounds

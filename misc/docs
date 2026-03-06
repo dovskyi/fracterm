@@ -2,6 +2,8 @@ FLAG CATALOG!
 
 -h      Self explanatory, outputs the help message.
 
+-d      Sets all defaults, so mandelbrot DEM at 5000 iters
+
 -f      Sets the fractal for the program, mandelbrot is always the default.
         Type it exactly as the name appears. This can be combined with
         -c (color) flag to get the output you actually want
@@ -26,6 +28,14 @@ FLAG CATALOG!
         about how fractal calculation works.
         $ fracterm -b 4
 
+-w      Write every single frame to a binary file. This is a basic
+        replay feature, probably will do an actual video export someday
+        with ffmpeg. To view the video, use a separate program, it in
+        fracterm/replay folder. Basically just input the path, that's it.
+        To replay you need path to file & fps you want it to play at.
+        $ fracterm -w ../replay
+        $ cinematograph ../replay/output 24
+
 -m      This is important. -m sets the mode. For the most part, you just
         want to explore the fractal, pan the space, zoom in/out here and
         there. For this, choose "explore". You don't even need to choose 
@@ -41,7 +51,7 @@ FLAG CATALOG!
 
 Full initialization examples:
 
-$ fracterm 
+$ fracterm -d
 Creates: Mandelbrot, DEM, explore mode, default variables
 
 $ fracterm -f burning_ship -c dwell -i 8500

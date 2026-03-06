@@ -1,12 +1,14 @@
 /*
-        fracterm v0.2
-        README for details
+   fracterm v0.3, 2026-03-05
+Changes:
+- Export frames to a binary file, play using cinematograph.c
 */
 #include <iostream>
-#include <cmath>
+#include <math.h>
 #include <gmp.h>
 #include <ncurses.h>
 #include <string.h>
+#include <fstream>
 
 #include "globals.h"
 #include "fractals.h"
@@ -130,6 +132,10 @@ void update_dydx(){
         dx=(bound.height_d)/row;
 }
 
+void write_frame(std::fstream& binfile){
+        binfile.write(grid, row*col);
+}
+
 void usage_message(){
         std::cout<<"\nFracterm: fractal explorer for the terminal\n\n"
                 <<"fracterm [flags]\n\n"
@@ -137,11 +143,15 @@ void usage_message(){
                 <<"-h | display this message\n"
                 <<"-d | set all defaults\n"
                 <<"-f | set fractal [default:mandelbrot]\n"
-                <<"    <mandelbrot, burning_ship, custom_formula>[no perturbation for ship yet]\n"
+                <<"    <mandelbrot, burning_ship, custom_formula>\n"
+                <<"    [perturbation only for mandelbrot currently]\n"
                 <<"-c | set color   [default:DEM]\n"
                 <<"    <DEM, dwell, custom_color>\n"
                 <<"-i | set iterations\n"
                 <<"-b | set bailout\n"
+                <<"-w | write all frames into a binary file\n"
+                <<"     <file name>\n"
+                <<"     [view using recording/cinematograph.c]\n"
                 <<"-m | set mode    [default:explore]\n"
                 <<"    <explore>\n"
                 <<"    <zoom [real] [imag]>\n\n"
@@ -150,8 +160,8 @@ void usage_message(){
                 <<"j/k | down/up\n"
                 <<"-/= | zoom in/out\n"
                 <<"q   | quit\n\n"
-                <<"For detailed description of flags, visit\n"
-                <<"misc/flags\n";
+                <<"For documentation, visit\n"
+                <<"misc/docs\n";
 }
 
 void error_message(){
@@ -159,13 +169,107 @@ void error_message(){
                 <<"-h for help\n\n";
 }
 
-int main (int argc, char* argv[]){
-        void (*generate_set_p)(const double&, const double&);
-        void (*update_precision_p)(const double&);
+template <bool write_mode>
+void navigate(){
+        mpf_sub(bound.width, bound.right, bound.left);
+        mpf_sub(bound.height, bound.top, bound.bottom);
+        update_dydx();
+        generate_set_p(dy, dx);
+        output();
+        if constexpr(write_mode){
+                binfile.write((char*)&row, sizeof(int));
+                binfile.write((char*)&col, sizeof(int));
+                write_frame(binfile);
+        }
+        while ((ch = getch()) != 'q'){
+                if (ch=='h'){
+                        mpf_mul(temp, bound.width, mpf_zoom);
 
+                        mpf_sub(bound.left, bound.left, temp);
+                        mpf_sub(bound.right, bound.right, temp);
+
+                        generate_set_p(dy, dx);
+                        output();
+                        if constexpr(write_mode){write_frame(binfile);}
+                }
+                if (ch =='j'){
+                        mpf_mul(temp, bound.height, mpf_zoom);
+
+                        mpf_add(bound.top, bound.top, temp);
+                        mpf_add(bound.bottom, bound.bottom, temp);
+
+                        generate_set_p(dy, dx);
+                        output();
+                        if constexpr(write_mode){write_frame(binfile);}
+                }
+                if (ch=='k'){
+                        mpf_mul(temp, bound.height, mpf_zoom);
+
+                        mpf_sub(bound.top, bound.top, temp);
+                        mpf_sub(bound.bottom, bound.bottom, temp);
+
+                        generate_set_p(dy, dx);
+                        output();
+                        if constexpr(write_mode){write_frame(binfile);}
+                }
+                if (ch=='l'){
+                        mpf_mul(temp, bound.width, mpf_zoom);
+
+                        mpf_add(bound.left, bound.left, temp);
+                        mpf_add(bound.right, bound.right, temp);
+
+                        generate_set_p(dy, dx);
+                        output();
+                        if constexpr(write_mode){write_frame(binfile);}
+                }
+                if (ch=='='){
+                        update_precision_p(dx);
+
+                        mpf_mul(temp, bound.height, mpf_zoom);
+                        mpf_sub(bound.top, bound.top, temp);
+                        mpf_add(bound.bottom, bound.bottom, temp);
+
+
+                        mpf_mul(temp, bound.width, mpf_zoom);
+                        mpf_add(bound.left, bound.left, temp);
+                        mpf_sub(bound.right, bound.right, temp);
+
+                        mpf_sub(bound.width, bound.right, bound.left);
+                        mpf_sub(bound.height, bound.top, bound.bottom);
+
+                        update_dydx();
+                        generate_set_p(dy, dx);
+                        output();
+                        if constexpr(write_mode){write_frame(binfile);}
+                }
+                if (ch=='-'){
+                        update_precision_p(dx);
+
+                        mpf_mul(temp, bound.height, mpf_zoom);
+                        mpf_add(bound.top, bound.top, temp);
+                        mpf_sub(bound.bottom, bound.bottom, temp);
+
+                        mpf_mul(temp, bound.width, mpf_zoom);
+                        mpf_sub(bound.left, bound.left, temp);
+                        mpf_add(bound.right, bound.right, temp);
+
+                        mpf_sub(bound.width, bound.right, bound.left);
+                        mpf_sub(bound.height, bound.top, bound.bottom);
+
+                        update_dydx();
+                        generate_set_p(dy, dx);
+                        output();
+                        if constexpr(write_mode){write_frame(binfile);}
+                }
+        }
+        if constexpr(write_mode){binfile.close();}
+}
+
+int main (int argc, char* argv[]){
         const char *formula_choice = "mandelbrot";
         const char *color_choice = "DEM";
         const char *mode_choice = "explore";
+        navigate_p = &navigate<0>;
 
         if (argc <= 1){
                 std::cout<<"\nFracterm: fractal explorer for the terminal\n\n"
@@ -182,13 +286,19 @@ int main (int argc, char* argv[]){
                                 case 'c': color_choice = argv[i+1];   break;
                                 case 'i': iters = atoi(argv[i+1]);    break;
                                 case 'b': bailout = atoi(argv[i+1]);  break;
+                                case 'w': binfile.open(argv[i+1], std::ios::out | std::ios::binary | std::ios::trunc);
+                                          if (!binfile.is_open()){
+                                                std::cout<<"Couldn't create a file\n\n"
+                                                         <<"-h for help\n";
+                                                return 0;
+                                          }
+                                          navigate_p = &navigate<1>;
+                                          break;
                                 case 'h': usage_message();         return 0;
                                 case 'm': mode_choice = argv[i+1];
-                                          part_r = new char[sizeof(argv[i+2])];
-                                          part_i = new char[sizeof(argv[i+3])];
                                           part_r = argv[i+2];
                                           part_i = argv[i+3];
-                                          i+=4;
+                                          i+=3;
                                           break;
                                 default:
                                           error_message();
@@ -266,90 +376,9 @@ int main (int argc, char* argv[]){
         }
         mpf_clears(two, one, NULL);
 
-        mpf_sub(bound.width, bound.right, bound.left);
-        mpf_sub(bound.height, bound.top, bound.bottom);
-        bound.width_d = mpf_get_d(bound.width);
-        bound.height_d = mpf_get_d(bound.height);
-        dy=(bound.width_d)/col;
-        dx=(bound.height_d)/row;
-        generate_set_p(dy, dx);
-        output();
 
-        while ((ch = getch()) != 'q'){
-                if (ch=='h'){
-                        mpf_mul(temp, bound.width, mpf_zoom);
+        navigate_p();
 
-                        mpf_sub(bound.left, bound.left, temp);
-                        mpf_sub(bound.right, bound.right, temp);
-
-                        generate_set_p(dy, dx);
-                        output();
-                }
-                if (ch =='j'){
-                        mpf_mul(temp, bound.height, mpf_zoom);
-
-                        mpf_add(bound.top, bound.top, temp);
-                        mpf_add(bound.bottom, bound.bottom, temp);
-
-                        generate_set_p(dy, dx);
-                        output();
-                }
-                if (ch=='k'){
-                        mpf_mul(temp, bound.height, mpf_zoom);
-
-                        mpf_sub(bound.top, bound.top, temp);
-                        mpf_sub(bound.bottom, bound.bottom, temp);
-
-                        generate_set_p(dy, dx);
-                        output();
-                }
-                if (ch=='l'){
-                        mpf_mul(temp, bound.width, mpf_zoom);
-
-                        mpf_add(bound.left, bound.left, temp);
-                        mpf_add(bound.right, bound.right, temp);
-
-                        generate_set_p(dy, dx);
-                        output();
-                }
-                if (ch=='='){
-                        update_precision_p(dx);
-
-                        mpf_mul(temp, bound.height, mpf_zoom);
-                        mpf_sub(bound.top, bound.top, temp);
-                        mpf_add(bound.bottom, bound.bottom, temp);
-
-
-                        mpf_mul(temp, bound.width, mpf_zoom);
-                        mpf_add(bound.left, bound.left, temp);
-                        mpf_sub(bound.right, bound.right, temp);
-
-                        mpf_sub(bound.width, bound.right, bound.left);
-                        mpf_sub(bound.height, bound.top, bound.bottom);
-
-                        update_dydx();
-                        generate_set_p(dy, dx);
-                        output();
-                }
-                if (ch=='-'){
-                        update_precision_p(dx);
-
-                        mpf_mul(temp, bound.height, mpf_zoom);
-                        mpf_add(bound.top, bound.top, temp);
-                        mpf_sub(bound.bottom, bound.bottom, temp);
-
-                        mpf_mul(temp, bound.width, mpf_zoom);
-                        mpf_sub(bound.left, bound.left, temp);
-                        mpf_add(bound.right, bound.right, temp);
-
-                        mpf_sub(bound.width, bound.right, bound.left);
-                        mpf_sub(bound.height, bound.top, bound.bottom);
-
-                        update_dydx();
-                        generate_set_p(dy, dx);
-                        output();
-                }
-        }
         delete[] grid;
         delete[] store_Z;
         mpf_clears(bound.right, bound.left, bound.top, bound.bottom, bound.width, bound.height, mpf_zoom, temp, NULL);
