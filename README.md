@@ -9,6 +9,8 @@ Supporting zooms up to 1.0^-150 *[given a reference point]*
 
 # INSTALL
 **Only supported on GNU/Linux**
+
+
 Dependencies: [*dev packages*]
 ```
 GNU Multiple Precision Arithmetic Library (GMP)
