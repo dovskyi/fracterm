@@ -1,5 +1,5 @@
 /*
-   fracterm v0.3, 2026-03-05
+   fracterm v0.21, 2026-03-05
 Changes:
 - Export frames to a binary file, play using cinematograph.c
 */
