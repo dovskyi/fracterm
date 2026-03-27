@@ -9,6 +9,7 @@ Supporting zooms up to 1.0^-150 *[given a reference point]*
 
 # INSTALL
 **Only supported on GNU/Linux**
+
 Dependencies: [*dev packages*]
 ```
 GNU Multiple Precision Arithmetic Library (GMP)
@@ -40,6 +41,7 @@ Flags:
     <DEM, dwell, custom_color>
 -i | set iterations
 -b | set bailout
+-t | set threads [default:hardware max]
 -w | write all frames into a binary file
     <file name/path>
     [view using cinematograph]
@@ -70,13 +72,12 @@ Cinematograph:
 # Note & TD
 I have a lot of fun making this project, and I will continue to add more features and optimizations until I hit my math ceiling [or get bored]. Most math stuff in here is based on documentation from great sources/people, translated into code. This means if I can understand it, I can code it. There are a lot of features I want to add, and I will do so periodically.
 
-v0.21: I just thought it would be nice to have some sort of basic replay functionality. Now if you choose -w flag, fracterm will write every frame into a binary file. You can then view it using cinematograph [cool name, right?] written in C. /misc/docs to see how it works.
-
-v0.2:  I finally added perturbation and DEM coloring method. Took 2 entire months to program this, but I am proud of the result. There are also a ton of new, small features; the program is unrecognizable from v0.1. The main issue right now is performance. I am hoping multithreading will fix it, we will see. I have never actually programmed multithreaded programs, so I need to do research first. But for now, shallow zooms (>1.0^-16) provide exceptional images, better than anything I could expect from ASCII graphics.
+v0.3, I added multithreading. That is something I was putting on the side for a while, but it was... simpler than I thought. Harder part was making a queue that functioned as a collection of callables. I borrowed some reference material for that, but implementation is mine. Everything works on void pointers and wrapper functions that dereference the said pointer.
 
 Current TD:
-* Multi-threading
-* Taylor series approximation
+* Automatic reference picking
+* Series approximation [derived already]
+* Ministatus, menus, etc.
 * More fractals
 * Ffmpeg video export
-* Ministatus, menus, etc.
+* Document with program explanations, for myself and whoever is curious

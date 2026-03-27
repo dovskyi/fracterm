@@ -1,17 +1,21 @@
-/*
-   fracterm v0.3, 2026-03-05
-Changes:
-- Export frames to a binary file, play using cinematograph.c
-*/
+/* fracterm v0.3 */
 #include <iostream>
 #include <math.h>
-#include <gmp.h>
-#include <ncurses.h>
 #include <string.h>
 #include <fstream>
+#include <vector>
+
+#include <gmp.h>
+#include <ncurses.h>
+
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include "taskqueue.h"
 
 #include "globals.h"
 #include "fractals.h"
+#include "thread_func.h"
 #include "pipeline.h"
 
 //tweak to suit your font, most work at 2:1
@@ -42,23 +46,49 @@ void generate_set(const double& dy, const double& dx){
                 p_d.iZ_i = mpf_get_d(temp)/dx;
 
                 p_d.Z_iters = reference_orbit<f>(p_d.Z_r, p_d.Z_i);
-                initial_perimeter<1, f, c>(dy, dx, m_d, &p_d);
-                mariani_silver<1, f, c>(dy, dx, m_d, &p_d);
-                mpf_clear(temp);
+
+                const int chunk_h = row/5;
+                const int chunk_w = col/5;
+                for (int i=0; i<5; i++){
+                        for (int j=0; j<5; j++){
+                                const int h_offset = i * chunk_h;
+                                const int w_offset = j * chunk_w;
+
+                                //ternaries are convenient!
+                                int curr_h = (i == 4) ? (row-h_offset): chunk_h;
+                                int curr_w = (j == 4) ? (col-w_offset): chunk_w;
+
+                                cfg_pool[i*5+j] = mariani_cfg{dy, dx, {h_offset, w_offset, curr_h, curr_w}, &p_d};
+                                node_pool[i*5+j]->func = &mariani_wrapper<1, f, c>;
+                                node_pool[i*5+j]->ptr = &cfg_pool[i*5+j];
+                                q.enqueue(node_pool[i*5+j]);
+                        }
+                }
+                q.wait4threads();
+                mpf_clears(p_d.Z_r, p_d.Z_i, temp, NULL);
                 grid[p_d.iZ_i*col+p_d.iZ_r] = sprite();
         }
         else {
-                initial_perimeter<0, f, c>(dy, dx, m_d, nullptr);
-                mariani_silver<0, f, c>(dy, dx, m_d, nullptr);
+                const int chunk_h = row/5;
+                const int chunk_w = col/5;
+                for (int i=0; i<5; i++){
+                        for (int j=0; j<5; j++){
+                                const int h_offset = i * chunk_h;
+                                const int w_offset = j * chunk_w;
+
+                                int curr_h = (i == 4) ? (row-h_offset): chunk_h;
+                                int curr_w = (j == 4) ? (col-w_offset): chunk_w;
+
+                                cfg_pool[i*5+j] = mariani_cfg{dy, dx, {h_offset, w_offset, curr_h, curr_w}, nullptr};
+                                node_pool[i*5+j]->func = &mariani_wrapper<0, f, c>;
+                                node_pool[i*5+j]->ptr = &cfg_pool[i*5+j];
+                                q.enqueue(node_pool[i*5+j]);
+                        }
+                }
+                q.wait4threads();
         }
 }
 
-void output(){
-        for (int x=0; x<row; x++){
-                mvaddnstr(x, 0, &grid[x * col], col);
-        }
-        refresh();
-}
 
 void assign_bounds(const char* part_r, const char* part_i, mpf_t height, mpf_t width){
         mpf_t zoom_r, zoom_i, temp;
@@ -124,6 +154,13 @@ void update_precision(const double& dx){
         }
 }
 
+void output(){
+        for (int x=0; x<row; x++){
+                mvaddnstr(x, 0, &grid[x * col], col);
+        }
+        refresh();
+}
+
 
 void update_dydx(){
         bound.width_d = mpf_get_d(bound.width);
@@ -134,39 +171,6 @@ void update_dydx(){
 
 void write_frame(std::fstream& binfile){
         binfile.write(grid, row*col);
-}
-
-void usage_message(){
-        std::cout<<"\nFracterm: fractal explorer for the terminal\n\n"
-                <<"fracterm [flags]\n\n"
-                <<"Flags:\n"
-                <<"-h | display this message\n"
-                <<"-d | set all defaults\n"
-                <<"-f | set fractal [default:mandelbrot]\n"
-                <<"    <mandelbrot, burning_ship, custom_formula>\n"
-                <<"    [perturbation only for mandelbrot currently]\n"
-                <<"-c | set color   [default:DEM]\n"
-                <<"    <DEM, dwell, custom_color>\n"
-                <<"-i | set iterations\n"
-                <<"-b | set bailout\n"
-                <<"-w | write all frames into a binary file\n"
-                <<"     <file name>\n"
-                <<"     [view using recording/cinematograph.c]\n"
-                <<"-m | set mode    [default:explore]\n"
-                <<"    <explore>\n"
-                <<"    <zoom [real] [imag]>\n\n"
-                <<"While in terminal window:\n"
-                <<"h/l | left/right\n"
-                <<"j/k | down/up\n"
-                <<"-/= | zoom in/out\n"
-                <<"q   | quit\n\n"
-                <<"For documentation, visit\n"
-                <<"misc/docs\n";
-}
-
-void error_message(){
-        std::cout<<"\nIncorrect Arguments\n\n"
-                <<"-h for help\n\n";
 }
 
 template <bool write_mode>
@@ -265,11 +269,47 @@ void navigate(){
         if constexpr(write_mode){binfile.close();}
 }
 
+void usage_message(){
+        std::cout<<"\nFracterm: fractal explorer for the terminal\n\n"
+                <<"fracterm [flags]\n\n"
+                <<"Flags:\n"
+                <<"-h | display this message\n"
+                <<"-d | set all defaults\n"
+                <<"-f | set fractal [default:mandelbrot]\n"
+                <<"    <mandelbrot, burning_ship, custom_formula>\n"
+                <<"    [perturbation only for mandelbrot currently]\n"
+                <<"-c | set color   [default:DEM]\n"
+                <<"    <DEM, dwell, custom_color>\n"
+                <<"-i | set iterations\n"
+                <<"-b | set bailout\n"
+                <<"-t | set threads [default:hardware max]\n"
+                <<"-w | write all frames into a binary file\n"
+                <<"     <file name>\n"
+                <<"     [view using recording/cinematograph.c]\n"
+                <<"-m | set mode    [default:explore]\n"
+                <<"    <explore>\n"
+                <<"    <zoom [real] [imag]>\n\n"
+                <<"While in terminal window:\n"
+                <<"h/l | left/right\n"
+                <<"j/k | down/up\n"
+                <<"-/= | zoom in/out\n"
+                <<"q   | quit\n\n"
+                <<"For documentation, visit\n"
+                <<"misc/docs\n";
+}
+
+void error_message(){
+        std::cout<<"\nIncorrect Arguments\n\n"
+                <<"-h for help\n\n";
+}
+
 int main (int argc, char* argv[]){
         const char *formula_choice = "mandelbrot";
         const char *color_choice = "DEM";
         const char *mode_choice = "explore";
         navigate_p = &navigate<0>;
+
+        con_thread = std::thread::hardware_concurrency();
 
         if (argc <= 1){
                 std::cout<<"\nFracterm: fractal explorer for the terminal\n\n"
@@ -286,11 +326,16 @@ int main (int argc, char* argv[]){
                                 case 'c': color_choice = argv[i+1];   break;
                                 case 'i': iters = atoi(argv[i+1]);    break;
                                 case 'b': bailout = atoi(argv[i+1]);  break;
+                                case 't': if (atoi(argv[i+1]) > con_thread || atoi(argv[i+1]) <= 0){
+                                          break;}
+                                          else {
+                                          con_thread = atoi(argv[i+1]);}
+                                          break;
                                 case 'w': binfile.open(argv[i+1], std::ios::out | std::ios::binary | std::ios::trunc);
                                           if (!binfile.is_open()){
-                                                std::cout<<"Couldn't create a file\n\n"
-                                                         <<"-h for help\n";
-                                                return 0;
+                                                  std::cout<<"Couldn't create a file\n\n"
+                                                          <<"-h for help\n";
+                                                  return 0;
                                           }
                                           navigate_p = &navigate<1>;
                                           break;
@@ -345,7 +390,17 @@ int main (int argc, char* argv[]){
                 return 0;
         }
 
-        //start curses
+        //thread inits
+        for (int i=0; i<con_thread; i++){
+                threads.emplace_back(&threadfunc, &q);
+        }
+        for (int i=0; i<25; i++){
+                node *n = new node;
+                node_pool[i] = n;
+        }
+
+
+        //curses inits
         initscr();
         raw();
         noecho();
@@ -354,16 +409,18 @@ int main (int argc, char* argv[]){
 
         getmaxyx(stdscr, row, col);
 
-        //GMP inits
-        mpf_set_default_prec(64);
-        mpf_inits(bound.right, bound.left, bound.top, bound.bottom, bound.width, bound.height, mpf_zoom, temp, NULL);
-        mpf_set_d(mpf_zoom, zoom_spd);
-
         grid = new char[row*col];
         for (int i=0; i<row*col; i++){
                 grid[i] = ' ';
         }
 
+        //GMP inits
+        mpf_set_default_prec(64);
+        mpf_inits(bound.right, bound.left, bound.top, bound.bottom, bound.width, bound.height, mpf_zoom, temp, NULL);
+        mpf_set_d(mpf_zoom, zoom_spd);
+
+
+        //dont ask
         mpf_t two, one;
         mpf_inits(two, one, NULL);
         mpf_set_ui(two, 2);
@@ -378,6 +435,15 @@ int main (int argc, char* argv[]){
 
 
         navigate_p();
+
+        //quit stuff
+        q.stop = 1;
+        q.cv.notify_all();
+        for (int i=0; i<con_thread; i++) {
+                if (threads[i].joinable()) {
+                        threads[i].join();
+                }
+        }
 
         delete[] grid;
         delete[] store_Z;

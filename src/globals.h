@@ -7,6 +7,7 @@
 #include <iostream>
 #include <cmath>
 #include <fstream>
+#include <vector>
 
 #define norm_lim 3
 
@@ -28,7 +29,7 @@ constexpr int d_size = sizeof(density)/sizeof(density[0])-2;
 char* grid;
 
 //perturbation threshold & zoom speed
-double threshold = 1.0e-16;
+double threshold = 1.0e-15;
 float zoom_spd = 0.05;
 
 //distance between 2 pixels
@@ -41,6 +42,10 @@ char ch;
 
 //where Z values go?!
 double* store_Z = new double[(iters+1)*2];
+
+std::vector<std::thread> threads;
+taskqueue q;
+int con_thread;
 
 mpf_t temp, mpf_zoom;
 
@@ -58,15 +63,9 @@ void (*navigate_p)();
 char* part_i;
 char* part_r;
 
-struct frame{
-        int width;
-        int height;
-        char* data;
-};
-
 struct bounds{
-//complex plane bounds
-//i.e our view point
+        //complex plane bounds
+        //i.e our view point
         mpf_t left;
         mpf_t right;
         mpf_t top;
@@ -87,6 +86,7 @@ struct perturb_data{
 };
 
 struct mariani_data{
+        mariani_data() = default;
         mariani_data(const int h_o, const int w_o, const int h, const int w):
                 h_offset(h_o), w_offset(w_o), height(h), width(w){}
         mariani_data(const int row, const int col){
@@ -108,4 +108,5 @@ char sprite(){
         if (i > sizeof(ref)/sizeof(ref[0])-2) i = 0;
         return ref[i];
 }
+
 #endif

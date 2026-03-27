@@ -22,10 +22,15 @@ FLAG CATALOG!
         iterations, the worse the performance
         $ fracterm -i 10000
 
+-t      Set how many threads the program will use, very simple. Defaults
+        to the maximum supported by hardware, as that provides best
+        results.
+        $ fracterm -t 5
+
 -b      Sets bailout. With ascii graphics, you can't really tell the
         difference. But someone might want to play with it, so why not?
-        I won't explain what a bailout is, go to dovskyi/docs to read
-        about how fractal calculation works.
+        It is basically an escape radius, it makes better images in full
+        resolution explorers. But results are diminishing.
         $ fracterm -b 4
 
 -w      Write every single frame to a binary file. This is a basic
@@ -59,5 +64,3 @@ Creates: Burning ship, dwell, iterations set to 8500
 
 $ fracterm -m zoom -1.789169018604823106674468341188838763817361836815 -0.000000339368515767182566028230266146812728348218894593 -i 15000
 Creates: Mandelbrot, DEM, zoom mode with reference point at provided coordinates, 15000 iterations
-
-

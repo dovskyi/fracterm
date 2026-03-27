@@ -88,27 +88,27 @@ void initial_perimeter(const double& dy, const double& dx, const mariani_data& m
                 double d_real;
                 double d_imag;
                 double temp;
-                for (int x=0; x<row; x++){
-                        temp = x-p_d->iZ_i;
+                for (int x=0; x<m_d.height; x++){
+                        temp = (m_d.h_offset+x)-p_d->iZ_i;
                         d_imag = temp*dx;
 
                         temp = -p_d->iZ_r;
-                        d_real = temp*dy;
-                        grid[x*col] = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
+                        d_real = (m_d.w_offset+temp)*dy;
+                        grid[(m_d.h_offset+x)*col + m_d.w_offset] = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
                         temp = p_d->iZ_r;
-                        d_real = temp*dy;
-                        grid[x*col+col-1] = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
+                        d_real = (m_d.w_offset+temp)*dy;
+                        grid[(m_d.h_offset+x)*col + (m_d.w_offset+m_d.width-1)] = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
                 }
-                for (int y=0; y<col; y++){
-                        temp = y-p_d->iZ_r;
-                        d_real= temp*dy;
+                for (int y=0; y<m_d.width; y++){
+                        temp = (m_d.w_offset+y)-p_d->iZ_r;
+                        d_real = temp*dy;
 
                         temp = -p_d->iZ_i;
-                        d_imag = temp*dx;
-                        grid[y] = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
+                        d_imag = (m_d.h_offset+temp)*dy;
+                        grid[m_d.h_offset*col+(m_d.w_offset+y)] = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
                         temp = p_d->iZ_i;
-                        d_imag = temp*dx;
-                        grid[(row-1)*col+y] = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
+                        d_imag = (m_d.h_offset+temp)*dy;
+                        grid[(m_d.h_offset + m_d.height-1)*col+(m_d.w_offset+y)] = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
                 }
         }
         else {
@@ -118,22 +118,22 @@ void initial_perimeter(const double& dy, const double& dx, const mariani_data& m
                 double left_d = mpf_get_d(bound.left);
                 double bottom_d = mpf_get_d(bound.bottom);
 
-                for (int x=0; x<row; x++){
-                        c_imag = bottom_d+(x*dx);
+                for (int x=0; x<m_d.height; x++){
+                        c_imag = bottom_d+((m_d.h_offset+x)*dx);
 
-                        c_real = left_d+dy;
-                        grid[x*col] = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
-                        c_real = left_d+((col-1)*dy);
-                        grid[x*col+col-1] = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
+                        c_real = left_d+(m_d.w_offset*dy);
+                        grid[(m_d.h_offset+x)*col + m_d.w_offset] = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
+                        c_real = left_d+((m_d.width-1 + m_d.w_offset)*dy);
+                        grid[(m_d.h_offset+x)*col + (m_d.w_offset+m_d.width-1)] = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
                 }
 
-                for (int y=0; y<col; y++){
-                        c_real = left_d+(y*dy);
+                for (int y=0; y<m_d.width; y++){
+                        c_real = left_d+((m_d.w_offset+y)*dy);
 
-                        c_imag = bottom_d+dx;
-                        grid[y] = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
-                        c_imag = bottom_d+((row-1)*dx);
-                        grid[(row-1)*col+y] = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
+                        c_imag = bottom_d+(m_d.h_offset*dx);
+                        grid[m_d.h_offset*col+(m_d.w_offset+y)] = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
+                        c_imag = bottom_d+((m_d.height-1 + m_d.h_offset)*dx);
+                        grid[(m_d.h_offset + m_d.height-1)*col+(m_d.w_offset+y)] = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
                 }
         }
 }
@@ -229,11 +229,12 @@ void mariani_silver(const double& dy, const double& dx, const mariani_data m_d, 
                 }
         }
 
-        //call 4 new rectangles
         mariani_silver<perturb, f, c>(dy, dx, {m_d.h_offset        , m_d.w_offset        , round_h, round_w}, p_d);
         mariani_silver<perturb, f, c>(dy, dx, {m_d.h_offset        , m_d.w_offset+round_w, round_h, midp_w }, p_d);
         mariani_silver<perturb, f, c>(dy, dx, {m_d.h_offset+round_h, m_d.w_offset        , midp_h , round_w}, p_d);
         mariani_silver<perturb, f, c>(dy, dx, {m_d.h_offset+round_h, m_d.w_offset+round_w, midp_h , midp_w }, p_d);
+
         return;
 }
+
 #endif
