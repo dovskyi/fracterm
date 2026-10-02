@@ -42,7 +42,7 @@ char process_pixel(const double& dy, const double& dx, const double& c_real, con
                         //it probably mathematically can't? idk
                 }
                 if constexpr(c == dwell){
-                        double norm = (mu/cnt)*0.1;
+                        double norm = (mu/cnt)*0.07;
                         return density[int(norm)%(d_size+1)];
                 }
         }
@@ -52,7 +52,7 @@ char process_pixel(const double& dy, const double& dx, const double& c_real, con
 }
 
 bool check_perimeter(mariani_data m_d){
-        char ch = grid[m_d.h_offset*col+m_d.w_offset];
+        char ch = grid[m_d.h_offset*col+m_d.w_offset].c;
 
         if (m_d.h_offset+m_d.height >= row){
                 m_d.height = row-m_d.h_offset-1;
@@ -62,19 +62,19 @@ bool check_perimeter(mariani_data m_d){
         }
 
         for (int x=0; x<m_d.height; x++){
-                if (grid[(m_d.h_offset+x)*col+(m_d.w_offset+m_d.width)] != ch){
+                if (grid[(m_d.h_offset+x)*col+(m_d.w_offset+m_d.width)].c != ch){
                         return 0;
                 }
-                if (grid[(m_d.h_offset+x)*col+m_d.w_offset] != ch){
+                if (grid[(m_d.h_offset+x)*col+m_d.w_offset].c != ch){
                         return 0;
                 }
         }
 
         for (int y=0; y<m_d.width; y++){
-                if (grid[m_d.h_offset*col+(m_d.w_offset+y)] != ch){
+                if (grid[m_d.h_offset*col+(m_d.w_offset+y)].c != ch){
                         return 0;
                 }
-                if (grid[(m_d.h_offset+m_d.height)*col+(m_d.w_offset+y)] != ch){
+                if (grid[(m_d.h_offset+m_d.height)*col+(m_d.w_offset+y)].c != ch){
                         return 0;
                 }
         }
@@ -94,10 +94,10 @@ void initial_perimeter(const double& dy, const double& dx, const mariani_data& m
 
                         temp = -p_d->iZ_r;
                         d_real = (m_d.w_offset+temp)*dy;
-                        grid[(m_d.h_offset+x)*col + m_d.w_offset] = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
+                        grid[(m_d.h_offset+x)*col + m_d.w_offset].c = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
                         temp = p_d->iZ_r;
                         d_real = (m_d.w_offset+temp)*dy;
-                        grid[(m_d.h_offset+x)*col + (m_d.w_offset+m_d.width-1)] = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
+                        grid[(m_d.h_offset+x)*col + (m_d.w_offset+m_d.width-1)].c = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
                 }
                 for (int y=0; y<m_d.width; y++){
                         temp = (m_d.w_offset+y)-p_d->iZ_r;
@@ -105,10 +105,10 @@ void initial_perimeter(const double& dy, const double& dx, const mariani_data& m
 
                         temp = -p_d->iZ_i;
                         d_imag = (m_d.h_offset+temp)*dy;
-                        grid[m_d.h_offset*col+(m_d.w_offset+y)] = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
+                        grid[m_d.h_offset*col+(m_d.w_offset+y)].c = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
                         temp = p_d->iZ_i;
                         d_imag = (m_d.h_offset+temp)*dy;
-                        grid[(m_d.h_offset + m_d.height-1)*col+(m_d.w_offset+y)] = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
+                        grid[(m_d.h_offset + m_d.height-1)*col+(m_d.w_offset+y)].c = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
                 }
         }
         else {
@@ -122,18 +122,18 @@ void initial_perimeter(const double& dy, const double& dx, const mariani_data& m
                         c_imag = bottom_d+((m_d.h_offset+x)*dx);
 
                         c_real = left_d+(m_d.w_offset*dy);
-                        grid[(m_d.h_offset+x)*col + m_d.w_offset] = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
+                        grid[(m_d.h_offset+x)*col + m_d.w_offset].c = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
                         c_real = left_d+((m_d.width-1 + m_d.w_offset)*dy);
-                        grid[(m_d.h_offset+x)*col + (m_d.w_offset+m_d.width-1)] = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
+                        grid[(m_d.h_offset+x)*col + (m_d.w_offset+m_d.width-1)].c = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
                 }
 
                 for (int y=0; y<m_d.width; y++){
                         c_real = left_d+((m_d.w_offset+y)*dy);
 
                         c_imag = bottom_d+(m_d.h_offset*dx);
-                        grid[m_d.h_offset*col+(m_d.w_offset+y)] = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
+                        grid[m_d.h_offset*col+(m_d.w_offset+y)].c = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
                         c_imag = bottom_d+((m_d.height-1 + m_d.h_offset)*dx);
-                        grid[(m_d.h_offset + m_d.height-1)*col+(m_d.w_offset+y)] = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
+                        grid[(m_d.h_offset + m_d.height-1)*col+(m_d.w_offset+y)].c = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
                 }
         }
 }
@@ -149,7 +149,7 @@ void mariani_silver(const double& dy, const double& dx, const mariani_data m_d, 
         if (check_perimeter(m_d) == 1 && dx < 0.0005) {
                 for (int y=0; y<m_d.width-0; y++){
                         for (int x=0; x<m_d.height-0; x++){
-                                grid[(m_d.h_offset+x)*col+(m_d.w_offset+y)] = grid[m_d.h_offset*col+m_d.w_offset];
+                                grid[(m_d.h_offset+x)*col+(m_d.w_offset+y)].c = grid[m_d.h_offset*col+m_d.w_offset].c;
                         }
                 }
                 return;
@@ -159,7 +159,7 @@ void mariani_silver(const double& dy, const double& dx, const mariani_data m_d, 
         if (check_perimeter(m_d) == 1 && dx < 0.01) {
                 for (int y=0; y<m_d.width-0; y++){
                         for (int x=0; x<m_d.height-0; x++){
-                                grid[(m_d.h_offset+x)*col+(m_d.w_offset+y)] = grid[m_d.h_offset*col+m_d.w_offset];
+                                grid[(m_d.h_offset+x)*col+(m_d.w_offset+y)].c = grid[m_d.h_offset*col+m_d.w_offset].c;
                         }
                 }
                 return;
@@ -178,7 +178,7 @@ void mariani_silver(const double& dy, const double& dx, const mariani_data m_d, 
                                 for (int x=0; x<m_d.height;x++){
                                         temp = (x+m_d.h_offset)-p_d->iZ_i;
                                         d_imag = temp*dx;
-                                        grid[(m_d.h_offset+x)*col+(m_d.w_offset+y)] = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
+                                        grid[(m_d.h_offset+x)*col+(m_d.w_offset+y)].c = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
                                 }
                         }
                         return;
@@ -189,7 +189,7 @@ void mariani_silver(const double& dy, const double& dx, const mariani_data m_d, 
                 for (int x=0; x<m_d.height; x++){
                         temp = (x+m_d.h_offset)-p_d->iZ_i;
                         d_imag = temp*dx;
-                        grid[(m_d.h_offset+x)*col+(m_d.w_offset+round_w)] = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
+                        grid[(m_d.h_offset+x)*col+(m_d.w_offset+round_w)].c = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
                 }
 
                 temp = (m_d.h_offset+round_h)-p_d->iZ_i;
@@ -197,7 +197,7 @@ void mariani_silver(const double& dy, const double& dx, const mariani_data m_d, 
                 for (int y=0; y<m_d.width; y++){
                         temp = (y+m_d.w_offset)-p_d->iZ_r;
                         d_real = temp*dy;
-                        grid[(m_d.h_offset+round_h)*col+(m_d.w_offset+y)] = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
+                        grid[(m_d.h_offset+round_h)*col+(m_d.w_offset+y)].c = process_pixel<perturb, f, c>(dy, dx, d_real, d_imag, p_d);
                 }
         }
 
@@ -212,7 +212,7 @@ void mariani_silver(const double& dy, const double& dx, const mariani_data m_d, 
                                 c_real = left_d+((m_d.w_offset+y)*dy);
                                 for (int x=0; x<m_d.height; x++){
                                         c_imag = bottom_d+((m_d.h_offset+x)*dx);
-                                        grid[(m_d.h_offset+x)*col+(m_d.w_offset+y)] = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
+                                        grid[(m_d.h_offset+x)*col+(m_d.w_offset+y)].c = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
                                 }
                         }
                         return;
@@ -220,12 +220,12 @@ void mariani_silver(const double& dy, const double& dx, const mariani_data m_d, 
                 c_real = left_d+((m_d.w_offset+round_w)*dy);
                 for (int x=0; x<m_d.height; x++){
                         c_imag = bottom_d+((m_d.h_offset+x)*dx);
-                        grid[(m_d.h_offset+x)*col+(m_d.w_offset+round_w)] = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
+                        grid[(m_d.h_offset+x)*col+(m_d.w_offset+round_w)].c = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
                 }
                 c_imag = bottom_d+((m_d.h_offset+round_h)*dx);
                 for (int y=0; y<m_d.width; y++){
                         c_real = left_d+((m_d.w_offset+y)*dy);
-                        grid[(m_d.h_offset+round_h)*col+(m_d.w_offset+y)] = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
+                        grid[(m_d.h_offset+round_h)*col+(m_d.w_offset+y)].c = process_pixel<perturb, f, c>(dy, dx, c_real, c_imag, p_d);
                 }
         }
 

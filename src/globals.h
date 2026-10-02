@@ -26,12 +26,17 @@ constexpr double inv_ln = 1.0/std::log(norm_lim+1);
 constexpr double inv_ln2 = 1.0/std::log(2.0);
 constexpr int d_size = sizeof(density)/sizeof(density[0])-2;
 
+struct pixel{
+        char c;
+        unsigned int channel;
+};
+
 //output array
-char* grid;
+pixel* grid;
 
 //perturbation threshold & zoom speed
-double threshold = 1.0e-15;
-float zoom_spd = 0.005;
+constexpr double threshold = 1.0e-15;
+float zoom_spd = 0.01;
 
 //distance between 2 pixels
 double dx;
@@ -40,7 +45,9 @@ double dy;
 //notcurses variables
 struct notcurses* nc;
 struct ncplane* stdplane;
-struct notcurses_options opts;
+struct notcurses_options nopts {
+        .flags = NCOPTION_SCROLLING
+};
 unsigned int row, col;
 char ch;
 

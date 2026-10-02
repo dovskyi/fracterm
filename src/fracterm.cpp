@@ -54,7 +54,6 @@ void generate_set(const double& dy, const double& dx){
                                 const int h_offset = i * chunk_h;
                                 const int w_offset = j * chunk_w;
 
-                                //ternaries are convenient!
                                 int curr_h = (i == 4) ? (row-h_offset): chunk_h;
                                 int curr_w = (j == 4) ? (col-w_offset): chunk_w;
 
@@ -66,7 +65,7 @@ void generate_set(const double& dy, const double& dx){
                 }
                 q.wait4threads();
                 mpf_clears(p_d.Z_r, p_d.Z_i, temp, NULL);
-                grid[p_d.iZ_i*col+p_d.iZ_r] = sprite();
+                grid[p_d.iZ_i*col+p_d.iZ_r].c = sprite();
         }
         else {
                 const int chunk_h = row/5;
@@ -155,8 +154,11 @@ void update_precision(const double& dx){
 }
 
 void output(){
+        ncplane_cursor_move_yx(stdplane, 0, 0);
         for (int x=0; x<row; x++){
-                ncplane_putnstr_yx(stdplane, x, 0, col, &grid[x*col]);
+                for (int y=0; y<col; y++){
+                        ncplane_putchar(stdplane, grid[x*col+y].c);
+                }
         }
         notcurses_render(nc);
 }
@@ -170,7 +172,7 @@ void update_dydx(){
 }
 
 void write_frame(std::fstream& binfile){
-        binfile.write(grid, row*col);
+        binfile.write((char*)grid, sizeof(pixel)*row*col);
 }
 
 template <bool write_mode>
@@ -401,15 +403,12 @@ int main (int argc, char* argv[]){
 
         //notcurses inits
         setlocale(LC_ALL, "");
-        nc = notcurses_init(&opts, NULL);
+        nc = notcurses_init(&nopts, NULL);
         stdplane = notcurses_stdplane(nc);
 
-        ncplane_dim_yx(notcurses_stdplane(nc), &row, &col);
-
-        grid = new char[row*col];
-        for (int i=0; i<row*col; i++){
-                grid[i] = ' ';
-        }
+        //get dimensions of the terminal and populate grid
+        ncplane_dim_yx(stdplane, &row, &col);
+        grid = new pixel[row*col];
 
         //GMP inits
         mpf_set_default_prec(64);
