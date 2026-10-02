@@ -42,7 +42,7 @@ char process_pixel(const double& dy, const double& dx, const double& c_real, con
                         //it probably mathematically can't? idk
                 }
                 if constexpr(c == dwell){
-                        double norm = (mu/cnt)*0.07;
+                        double norm = (mu/cnt)*0.1;
                         return density[int(norm)%(d_size+1)];
                 }
         }

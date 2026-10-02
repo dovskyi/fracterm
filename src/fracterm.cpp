@@ -1,4 +1,4 @@
-/* fracterm v0.3 */
+/* fracterm v0.35 */
 #include <iostream>
 #include <math.h>
 #include <string.h>
@@ -6,7 +6,7 @@
 #include <vector>
 
 #include <gmp.h>
-#include <ncurses.h>
+#include <notcurses/notcurses.h>
 
 #include <thread>
 #include <mutex>
@@ -156,9 +156,9 @@ void update_precision(const double& dx){
 
 void output(){
         for (int x=0; x<row; x++){
-                mvaddnstr(x, 0, &grid[x * col], col);
+                ncplane_putnstr_yx(stdplane, x, 0, col, &grid[x*col]);
         }
-        refresh();
+        notcurses_render(nc);
 }
 
 
@@ -185,7 +185,7 @@ void navigate(){
                 binfile.write((char*)&col, sizeof(int));
                 write_frame(binfile);
         }
-        while ((ch = getch()) != 'q'){
+        while ((ch = notcurses_get(nc, NULL, NULL)) != 'q'){
                 if (ch=='h'){
                         mpf_mul(temp, bound.width, mpf_zoom);
 
@@ -399,15 +399,12 @@ int main (int argc, char* argv[]){
                 node_pool[i] = n;
         }
 
+        //notcurses inits
+        setlocale(LC_ALL, "");
+        nc = notcurses_init(&opts, NULL);
+        stdplane = notcurses_stdplane(nc);
 
-        //curses inits
-        initscr();
-        raw();
-        noecho();
-        keypad(stdscr, TRUE);
-        scrollok(stdscr, FALSE);
-
-        getmaxyx(stdscr, row, col);
+        ncplane_dim_yx(notcurses_stdplane(nc), &row, &col);
 
         grid = new char[row*col];
         for (int i=0; i<row*col; i++){
@@ -433,7 +430,6 @@ int main (int argc, char* argv[]){
         }
         mpf_clears(two, one, NULL);
 
-
         navigate_p();
 
         //quit stuff
@@ -449,6 +445,6 @@ int main (int argc, char* argv[]){
         delete[] store_Z;
         mpf_clears(bound.right, bound.left, bound.top, bound.bottom, bound.width, bound.height, mpf_zoom, temp, NULL);
 
-        refresh();
-        endwin();
+        notcurses_render(nc);
+        notcurses_stop(nc);
         return 0;}

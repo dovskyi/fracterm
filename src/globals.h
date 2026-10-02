@@ -8,6 +8,7 @@
 #include <cmath>
 #include <fstream>
 #include <vector>
+#include <notcurses/notcurses.h>
 
 #define norm_lim 3
 
@@ -30,14 +31,17 @@ char* grid;
 
 //perturbation threshold & zoom speed
 double threshold = 1.0e-15;
-float zoom_spd = 0.05;
+float zoom_spd = 0.005;
 
 //distance between 2 pixels
 double dx;
 double dy;
 
-//ncurses variables
-int row, col;
+//notcurses variables
+struct notcurses* nc;
+struct ncplane* stdplane;
+struct notcurses_options opts;
+unsigned int row, col;
 char ch;
 
 //where Z values go?!

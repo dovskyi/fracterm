@@ -4,6 +4,8 @@ Noone is seeking an ascii explorer for the details; the point is the ability to 
 
 Supporting zooms up to 1.0^-150 *[given a reference point]*
 
+Read development process at [dovskyi.org](https://dovskyi.org/src/projects.php#1016)
+
 ![sample](misc/pictures/sample.png)
 *more images in misc/pictures*
 
@@ -13,8 +15,11 @@ Supporting zooms up to 1.0^-150 *[given a reference point]*
 Dependencies: [*dev packages*]
 ```
 GNU Multiple Precision Arithmetic Library (GMP)
-Ncurses
+Notcurses
+
++ Make & gcc
 ```
+
 Compilation:
 ```
 git clone https://github.com/dovskyi/fracterm
@@ -59,7 +64,7 @@ Terminal controls:
     +/-: zoom in/out
     q: quit
 ```
-Cinematograph:
+Cinematograph *(Only for version 0.3)*:
 ```
     cinematograph [file path] <fps>
 
